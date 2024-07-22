@@ -7,6 +7,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 import os
+import json
 
 class Sentence(BaseModel):
     """Information about a generated sentence."""
@@ -23,14 +24,20 @@ def generate_sentences(api_key, text, num_sentences):
     llm = ChatOpenAI(model="gpt-4o")
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", f"你是一位高中英语老师，你希望将下面的文本转换成你的学生可以练习的{num_sentences}句英语句子，并生成对应的中文翻译。"),
+        ("system", f"你是一位高中英语老师，你希望将下面的文本转换成你的学生可以练习的{num_sentences}句英语句子，并生成对应的中文翻译。请以如下JSON格式返回结果：{{\"sentences\":[{{\"english\":\"<英语句子>\",\"chinese\":\"<中文翻译>\"}},...]}}"),
         ("user", f"文本：{text}")
     ])
 
     output_parser = PydanticOutputParser(pydantic_object=Data)
     chain = prompt | llm | output_parser
 
-    generated_data = chain.invoke({"input": text})
+    try:
+        generated_data = chain.invoke({"input": text})
+    except Exception as e:
+        st.error(f"Error during invocation: {e}")
+        return []
+
+    st.json(generated_data.dict())  # Show the raw generated data for debugging
 
     sentences_data = []
     for sentence in generated_data.sentences:
