@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from io import BytesIO
+from io import BytesIO, StringIO
 from typing import List
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
@@ -67,16 +67,27 @@ if st.button('生成句子'):
         if sentences_data:
             df = pd.DataFrame(sentences_data)
             st.write(df)
-            # 将DataFrame导出为Excel文件
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False, sheet_name='Sentences')
-            output.seek(0)
-            st.download_button(
-                label="下载句子表格",
-                data=output,
-                file_name='generated_sentences.xlsx',
-                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            )
+            
+            # Try to create Excel file, fall back to CSV if xlsxwriter is not available
+            try:
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    df.to_excel(writer, index=False, sheet_name='Sentences')
+                output.seek(0)
+                st.download_button(
+                    label="下载Excel表格",
+                    data=output,
+                    file_name='generated_sentences.xlsx',
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+            except ImportError:
+                st.warning("Excel导出功能不可用。将提供CSV格式下载。")
+                csv = df.to_csv(index=False)
+                st.download_button(
+                    label="下载CSV表格",
+                    data=csv,
+                    file_name="generated_sentences.csv",
+                    mime="text/csv",
+                )
         else:
             st.write('没有生成句子')
