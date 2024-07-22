@@ -25,7 +25,7 @@ def generate_sentences(api_key, text, num_sentences):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", "你是一位高中英语老师。将下面的文本转换成学生可以练习的英语句子，并生成对应的中文翻译。"),
-        ("user", f"文本: {text}"),
+        ("user", "{text}"),
         ("user", f"请生成{num_sentences}个句子，并以如下JSON格式返回: {{\"sentences\":[{{\"english\":\"<英语句子>\",\"chinese\":\"<中文翻译>\"}},...]}}")
     ])
 
@@ -33,7 +33,8 @@ def generate_sentences(api_key, text, num_sentences):
     chain = prompt | llm | output_parser
 
     try:
-        generated_data = chain.invoke({"input": text})
+        variables = {"text": text}
+        generated_data = chain.invoke(variables)
     except Exception as e:
         st.error(f"Error during invocation: {e}")
         return []
