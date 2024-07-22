@@ -32,7 +32,8 @@ def generate_sentences(api_key, text, num_sentences):
     chain = prompt | llm | output_parser
 
     try:
-        generated_data = chain.invoke({"input": text})
+        variables = {"text": text, "num_sentences": num_sentences}
+        generated_data = chain.invoke(variables)
     except Exception as e:
         st.error(f"Error during invocation: {e}")
         return []
