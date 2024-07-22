@@ -25,15 +25,15 @@ def generate_sentences(api_key, text, num_sentences):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", "你是一位高中英语老师。将下面的文本转换成学生可以练习的英语句子，并生成对应的中文翻译。"),
-        ("user", "{text}"),
-        ("user", f"请生成{num_sentences}个句子，并以如下JSON格式返回: {{\"sentences\":[{{\"english\":\"<英语句子>\",\"chinese\":\"<中文翻译>\"}},...]}}")
+        ("user", "文本: {text}"),
+        ("user", "请生成 {num_sentences} 个句子，并以如下JSON格式返回: {\"sentences\":[{\"english\":\"<英语句子>\",\"chinese\":\"<中文翻译>\"},...]}")
     ])
 
     output_parser = PydanticOutputParser(pydantic_object=Data)
     chain = prompt | llm | output_parser
 
     try:
-        variables = {"text": text}
+        variables = {"text": text, "num_sentences": num_sentences}
         generated_data = chain.invoke(variables)
     except Exception as e:
         st.error(f"Error during invocation: {e}")
